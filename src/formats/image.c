@@ -7,11 +7,10 @@
 #include "formats/bmp.h"
 
 // ---------------------------------------------------------------------------
-static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height) {
+static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height, size_t len) {
     int bpos = 0, pos = 0, i;
-    size_t len = width * height;
-    unsigned char* bitmap = (unsigned char*)calloc(len, 1);
-    uint16_t* result = (unsigned char*)calloc(len * 2, sizeof(uint16_t));
+    unsigned char* bitmap = (unsigned char*)calloc(width * height, 1);
+    uint16_t* result = (unsigned char*)calloc(width * height * 2, sizeof(uint16_t));
     unsigned int extra = data[0] - 2;
     int next = data[0] + data[1];
     int bglen = -1;
@@ -21,7 +20,7 @@ static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height
         bitmap[bpos++] = data[pos++];
     }
 
-    while(bpos + extra < len && pos < len) {
+    while(bpos + extra < width * height && pos < len) {
         int widebf = (((int)data[pos++]) << 1) | 1;
         if(pos >= len) break;
         while((widebf & 0xff) != 0) {
@@ -33,7 +32,6 @@ static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height
                         bglen = data[pos];
                     } else {
                         extra += bglen - 2;
-                        printf("%zd / %zd\n", pos, len);
                         next += bglen + data[pos];
                         bglen = -1;
                     }
@@ -94,7 +92,7 @@ static char *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
     strcpy(entry->filetype, "img");
     char *content = libsrf_get_raw_entry(session, entry);
     char *ptr = content;
-
+    
     strcpy(entry->filetype, "bmp");
 
     ImageHeader *hdr = (ImageHeader *) ptr;
@@ -155,7 +153,7 @@ static char *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
                libsrf_swap16(img->height));
 
         unsigned char* img_data = (unsigned char*)(content + libsrf_swap32(img->offset));
-        uint16_t* raw = convert_to_raw(img_data, libsrf_swap16(img->width), libsrf_swap16(img->height));
+        uint16_t* raw = convert_to_raw(img_data, libsrf_swap16(img->width), libsrf_swap16(img->height), entry->size - libsrf_swap32(img->offset));
         return libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &(entry->plugin_size));
         img++;
         break;
