@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height, size_t len) {
     int bpos = 0, pos = 0, i;
-    unsigned char* bitmap = (unsigned char*)calloc(width * height, 1);
+    unsigned char* bitmap = (unsigned char*)calloc(width * height * 2, 1);
     uint16_t* result = (unsigned char*)calloc(width * height * 2, sizeof(uint16_t));
     unsigned int extra = data[0] - 2;
     int next = data[0] + data[1];
@@ -42,11 +42,13 @@ static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height
                 int info[2];
                 info[0] = data[pos++];
                 info[1] = data[pos++];
+                if(pos >= len) break;
                 if((info[1] & 0xf0) == 0) { // repeat - 3 byte syntax
                     repeat = data[pos++] + 0x10;
                 } else { // repeat - 2 byte syntax
                     repeat = ((unsigned char)(info[1] & 0xf0)) >> 4;
                 }
+                if(pos >= len) break;
                 int offset = bpos - (info[0] + 0x100 * (info[1] & 0x0f));
                 for(i = 0; i < repeat + 2; i++) {
                     if((bpos == next - extra) || (bglen != -1)) {
@@ -74,12 +76,14 @@ static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height
             next += bglen + bitmap[i];
             while(bglen--) {
                 result[pos++] = 255 << 8; // transparent
+                if(pos >= width * height) break;
             }
             bglen = -1;
         } else if(pos == next) {
             bglen = bitmap[i];
         } else {
             result[pos++] = bitmap[i];
+            if(pos >= width * height) break;
         }
     }
     free(bitmap);
@@ -99,6 +103,9 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
 
     int i, j;
     uint16_t entries = libsrf_swap16(hdr->entries);
+    libsrf_files_t* files = (libsrf_files_t*)malloc(sizeof(libsrf_files_t));
+    files->count = 0;
+    files->files = NULL;
 
     // image indices
     char *header_end = ptr + entries * 2;
@@ -154,13 +161,16 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
         size_t bmp_size = 0;
         char* bmp = libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &bmp_size);
         free(raw);
-        free(content); // TODO: handle other images
-        return libsrf_to_single_file(bmp, bmp_size, "bmp");
+        files->count++;
+        files->files = realloc(files->files, files->count * sizeof(libsrf_file_t));
+        files->files[files->count - 1].data = bmp;
+        files->files[files->count - 1].size = bmp_size;
+        strcpy(files->files[files->count - 1].filetype, "bmp");
         img++;
-        break;
     }
 
-    return NULL; //content;
+    free(content);
+    return files;
 }
 
 PLUGIN("off4", handlerOff4);
