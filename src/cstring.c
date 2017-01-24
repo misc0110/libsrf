@@ -33,9 +33,13 @@ size_t libsrf_cstring_get_capacity(char *str) {
 // ---------------------------------------------------------------------------
 char* libsrf_cstring_set_capacity(char *str, size_t capacity) {
     cstring* c = TO_CSTR(str);
-    if(capacity <= c->capacity) return str;
-    c = (cstring*)realloc(c, capacity + sizeof(cstring));
-    c->capacity = capacity;
+    if(capacity <= c->capacity) {
+        return str;
+    }
+    while(c->capacity < capacity) {
+        c->capacity *= 2;
+    }
+    c = (cstring*)realloc(c, c->capacity + sizeof(cstring));
     return TO_CHAR(c);
 }
 

@@ -36,6 +36,7 @@ typedef struct {
     char *data;
     size_t pos;
     size_t len;
+    size_t capacity;
     int type;
 } MFILE;
 
@@ -51,8 +52,9 @@ static MFILE *mopen_read(char *buffer, int len) {
 static MFILE *mopen_write() {
     MFILE *m = (MFILE *) malloc(sizeof(MFILE));
     m->pos = 0;
-    m->len = 4096;
-    m->data = (char *) calloc(m->len, sizeof(char));
+    m->len = 0;
+    m->capacity = 4096;
+    m->data = (char *) calloc(m->capacity, sizeof(char));
     m->type = 1;
     return m;
 }
@@ -101,11 +103,13 @@ static int mfseek(MFILE *stream, long int off, int whence) {
 }
 
 static size_t mfwrite(const void *ptr, size_t size, size_t nmemb, MFILE *stream) {
-    if (stream->pos + size * nmemb >= stream->len) {
-        stream->data = (char *) realloc(stream->data, stream->pos + size * nmemb);
-        stream->len = stream->pos + size * nmemb;
-
+    if (stream->pos + size * nmemb >= stream->capacity) {
+        while(stream->capacity < stream->pos + size * nmemb) {
+            stream->capacity *= 2;
+        }
+        stream->data = (char *) realloc(stream->data, stream->capacity);
     }
+    stream->len = stream->pos + size * nmemb;
     size_t i;
     for (i = 0; i < size * nmemb; i++) {
         stream->data[stream->pos + i] = ((char *) ptr)[i];
