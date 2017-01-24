@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "formats/bmp.h"
 
 static const uint32_t colors[] = {

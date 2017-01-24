@@ -30,13 +30,13 @@ static libsrf_files_t *readWAVEEntry(libsrf_t* session, libsrf_entry_t *entry) {
     memcpy(wave->data, "data", 4);
     wave->size = (uint32_t)entry->size;
 
-    memcpy(ptr, content + 85, entry->size);
+    memcpy(ptr, content + 85, entry->size - 85);
     free(content);
     return libsrf_to_single_file(sound, entry->size, "wav");
 }
 
 // ---------------------------------------------------------------------------
-static char *readAIFCEntry(libsrf_t* session, libsrf_entry_t *entry) {
+static libsrf_files_t *readAIFCEntry(libsrf_t* session, libsrf_entry_t *entry) {
     char *content = libsrf_get_raw_entry(session, entry);
     char *sound = (char *) calloc(entry->size + 100, sizeof(char));
     char *ptr = sound;
@@ -77,26 +77,27 @@ static libsrf_files_t* handlerSND(libsrf_t* session, libsrf_entry_t* entry) {
     return readAIFCEntry(session, entry);
 }
 
-// ---------------------------------------------------------------------------
-static libsrf_files_t* handlerMJ18(libsrf_t* session, libsrf_entry_t* entry) {
-    return readWAVEEntry(session, entry);
-}
+#define handlerMusic(t) libsrf_files_t* handler##t(libsrf_t* session, libsrf_entry_t* entry) { return readWAVEEntry(session, entry); }
 
-// ---------------------------------------------------------------------------
-static libsrf_files_t* handlerMJ19(libsrf_t* session, libsrf_entry_t* entry) {
-    return readWAVEEntry(session, entry);
-}
-
-// ---------------------------------------------------------------------------
-static libsrf_files_t* handlerMQ(libsrf_t* session, libsrf_entry_t* entry) {
-    return readAIFCEntry(session, entry);
-}
+handlerMusic(MJ)
+handlerMusic(MK)
+handlerMusic(ML)
+handlerMusic(MM)
+handlerMusic(MN)
+handlerMusic(MO)
+handlerMusic(MP)
+handlerMusic(MQ)
 
 
 PLUGIN("snd", handlerSND);
 
-PLUGIN("Mj18", handlerMJ18);
+PLUGIN("Mj", handlerMJ);
+PLUGIN("Mk", handlerMK);
 
-PLUGIN("Mj19", handlerMJ19);
+PLUGIN("Ml", handlerML);
+PLUGIN("Mm", handlerMM);
+PLUGIN("Mn", handlerMN);
 
+PLUGIN("Mo", handlerMO);
+PLUGIN("Mp", handlerMP);
 PLUGIN("Mq", handlerMQ);
