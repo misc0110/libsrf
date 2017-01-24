@@ -96,9 +96,7 @@ int libsrf_read_entry(libsrf_t* session, libsrf_entry_t* entry) {
     fread(&e, sizeof(FileEntry), 1, session->file);
     entry->id = libsrf_swap32(e.id);
     entry->size = libsrf_swap32(e.length);
-    entry->plugin_size = entry->size;
     entry->offset = libsrf_swap32(e.offset);
-    strcpy(entry->filetype, "raw");
     return 1;
 }
 
@@ -113,7 +111,7 @@ char* libsrf_get_raw_entry(libsrf_t* session, libsrf_entry_t* entry) {
 }
 
 // ---------------------------------------------------------------------------
-char* libsrf_get_entry(libsrf_t* session, libsrf_entry_t* entry) {
+libsrf_files_t* libsrf_get_entry(libsrf_t* session, libsrf_entry_t* entry) {
     int plugin = libsrf_find_plugin(session->current_type);
     if(plugin == -1) return NULL;
     return libsrf_plugin[plugin].handler(session, entry);
@@ -125,13 +123,8 @@ int libsrf_section_is_supported(libsrf_section_t* section) {
 }
 
 // ---------------------------------------------------------------------------
-char* libsrf_entry_get_filetype(libsrf_t* session, libsrf_entry_t* entry) {
-    return entry->filetype;
-}
-
-// ---------------------------------------------------------------------------
 size_t libsrf_entry_get_size(libsrf_t* session, libsrf_entry_t* entry) {
-    return entry->plugin_size;
+    return entry->size;
 }
 
 // ---------------------------------------------------------------------------

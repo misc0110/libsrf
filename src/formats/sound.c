@@ -9,7 +9,7 @@
 #include "plugin.h"
 
 // ---------------------------------------------------------------------------
-static char *readWAVEEntry(libsrf_t* session, libsrf_entry_t *entry) {
+static libsrf_files_t *readWAVEEntry(libsrf_t* session, libsrf_entry_t *entry) {
     char *content = libsrf_get_raw_entry(session, entry);
     char *sound = (char *) calloc(entry->size + 100, sizeof(char));
     char *ptr = sound;
@@ -32,8 +32,7 @@ static char *readWAVEEntry(libsrf_t* session, libsrf_entry_t *entry) {
 
     memcpy(ptr, content + 85, entry->size);
     free(content);
-    strcpy(entry->filetype, "wav");
-    return sound;
+    return libsrf_to_single_file(sound, entry->size, "wav");
 }
 
 // ---------------------------------------------------------------------------
@@ -70,28 +69,26 @@ static char *readAIFCEntry(libsrf_t* session, libsrf_entry_t *entry) {
     int wav_len = 0;
     char* wav = libsrf_aifc2wav(sound, entry->size, &wav_len);
     free(sound);
-    strcpy(entry->filetype, "wav");
-    entry->plugin_size = wav_len;
-    return wav;
+    return libsrf_to_single_file(wav, wav_len, "wav");
 }
 
 // ---------------------------------------------------------------------------
-static char* handlerSND(libsrf_t* session, libsrf_entry_t* entry) {
+static libsrf_files_t* handlerSND(libsrf_t* session, libsrf_entry_t* entry) {
     return readAIFCEntry(session, entry);
 }
 
 // ---------------------------------------------------------------------------
-static char* handlerMJ18(libsrf_t* session, libsrf_entry_t* entry) {
+static libsrf_files_t* handlerMJ18(libsrf_t* session, libsrf_entry_t* entry) {
     return readWAVEEntry(session, entry);
 }
 
 // ---------------------------------------------------------------------------
-static char* handlerMJ19(libsrf_t* session, libsrf_entry_t* entry) {
+static libsrf_files_t* handlerMJ19(libsrf_t* session, libsrf_entry_t* entry) {
     return readWAVEEntry(session, entry);
 }
 
 // ---------------------------------------------------------------------------
-static char* handlerMQ(libsrf_t* session, libsrf_entry_t* entry) {
+static libsrf_files_t* handlerMQ(libsrf_t* session, libsrf_entry_t* entry) {
     return readAIFCEntry(session, entry);
 }
 

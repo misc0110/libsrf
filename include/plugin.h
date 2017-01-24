@@ -10,7 +10,7 @@ extern int libsrf_plugin_count;
 typedef struct {
     const char *type;
 
-    char* (*handler)(libsrf_t *, libsrf_entry_t*);
+    libsrf_files_t* (*handler)(libsrf_t *, libsrf_entry_t*);
 } PluginHandler;
 extern PluginHandler libsrf_plugin[MAX_PLUGINS];
 

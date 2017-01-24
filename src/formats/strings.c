@@ -9,24 +9,21 @@
 
 // ---------------------------------------------------------------------------
 static char *handleString(libsrf_t *session, libsrf_entry_t *entry, int correction) {
-    strcpy(entry->filetype, "txt");
     char *content = libsrf_get_raw_entry(session, entry);
     content[entry->size - correction] = 0;
     return content;
 }
 
 // ---------------------------------------------------------------------------
-static char *handleUTF8String(libsrf_t *session, libsrf_entry_t *entry, int correction) {
-    strcpy(entry->filetype, "txt");
+static libsrf_files_t *handleUTF8String(libsrf_t *session, libsrf_entry_t *entry, int correction) {
     char *content = libsrf_get_raw_entry(session, entry);
     content[entry->size - correction] = 0;
     char* utf = libsrf_encoding_move_to_utf8(content);
-    entry->plugin_size = strlen(utf) + 1;
-    return utf;
+    return libsrf_to_single_file(utf, strlen(utf) + 1, "txt");
 }
 
 // ---------------------------------------------------------------------------
-static char* handleStringArray(libsrf_t* session, libsrf_entry_t* entry) {
+static libsrf_files_t* handleStringArray(libsrf_t* session, libsrf_entry_t* entry) {
     char* content = handleString(session, entry, 0);
     char* str = content;
     char* json = libsrf_cstring_create();
@@ -47,59 +44,57 @@ static char* handleStringArray(libsrf_t* session, libsrf_entry_t* entry) {
     json = libsrf_cstring_append(json, "]}");
     free(content);
     content = libsrf_cstring_move_to_char(json);
-    strcpy(entry->filetype, "json");
     char* utf = libsrf_encoding_move_to_utf8(content);
-    entry->plugin_size = strlen(utf) + 1;
-    return utf;
+    return libsrf_to_single_file(utf, strlen(utf) + 1, "json");
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerSTR(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerSTR(libsrf_t *session, libsrf_entry_t *entry) {
     return handleUTF8String(session, entry, 1);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerRoot(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerRoot(libsrf_t *session, libsrf_entry_t *entry) {
     return handleStringArray(session, entry);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerMtch(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerMtch(libsrf_t *session, libsrf_entry_t *entry) {
     return handleStringArray(session, entry);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerDcoy(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerDcoy(libsrf_t *session, libsrf_entry_t *entry) {
     return handleStringArray(session, entry);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerStrl(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerStrl(libsrf_t *session, libsrf_entry_t *entry) {
     return handleStringArray(session, entry);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerGibr(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerGibr(libsrf_t *session, libsrf_entry_t *entry) {
     return handleUTF8String(session, entry, 0);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerHnt(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerHnt(libsrf_t *session, libsrf_entry_t *entry) {
     return handleUTF8String(session, entry, 0);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerGory(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerGory(libsrf_t *session, libsrf_entry_t *entry) {
     return handleUTF8String(session, entry, 0);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerAnsr(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerAnsr(libsrf_t *session, libsrf_entry_t *entry) {
     return handleUTF8String(session, entry, 0);
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerWrds(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerWrds(libsrf_t *session, libsrf_entry_t *entry) {
     int i;
     char *content = handleString(session, entry, 0);
     int count = content[0];
@@ -141,13 +136,11 @@ static char *handlerWrds(libsrf_t *session, libsrf_entry_t *entry) {
     free(content);
     content = libsrf_cstring_move_to_char(json);
     char* utf = libsrf_encoding_move_to_utf8(content);
-    entry->plugin_size = strlen(utf) + 1;
-    strcpy(entry->filetype, "json");
-    return utf;
+    return libsrf_to_single_file(utf, strlen(utf) + 1, "json");
 }
 
 // ---------------------------------------------------------------------------
-static char *handlerMultiStr(libsrf_t *session, libsrf_entry_t *entry) {
+static libsrf_files_t *handlerMultiStr(libsrf_t *session, libsrf_entry_t *entry) {
 
     char *content = handleString(session, entry, 0);
     int count = libsrf_swap16(*(uint16_t *) content);
@@ -186,9 +179,7 @@ static char *handlerMultiStr(libsrf_t *session, libsrf_entry_t *entry) {
     free(content);
     content = libsrf_cstring_move_to_char(json);
     char* utf = libsrf_encoding_move_to_utf8(content);
-    entry->plugin_size = strlen(utf) + 1;
-    strcpy(entry->filetype, "json");
-    return utf;
+    return libsrf_to_single_file(utf, strlen(utf) + 1, "json");
 }
 
 PLUGIN("STR ", handlerSTR);

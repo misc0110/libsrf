@@ -7,8 +7,7 @@
 #include "cstring.h"
 
 // ---------------------------------------------------------------------------
-static char *handlerAns(libsrf_t *session, libsrf_entry_t *entry) {
-    strcpy(entry->filetype, "json");
+static libsrf_files_t *handlerAns(libsrf_t *session, libsrf_entry_t *entry) {
     char* json = libsrf_cstring_create();
     json = libsrf_cstring_append(json, "[");
 
@@ -28,8 +27,7 @@ static char *handlerAns(libsrf_t *session, libsrf_entry_t *entry) {
     free(content);
     content = libsrf_cstring_to_char(json);
     libsrf_cstring_destroy(json);
-    entry->plugin_size = strlen(content) + 1;
-    return content;
+    return libsrf_to_single_file(content, strlen(content) + 1, "json");
 }
 
 PLUGIN("ANS#", handlerAns);

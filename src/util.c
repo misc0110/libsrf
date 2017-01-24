@@ -31,26 +31,14 @@ float libsrf_swap_float(float inFloat) {
    return retVal;
 }
 
-#if 0
 // ---------------------------------------------------------------------------
-char* readEntry(FileEntry* entry, FILE* f) {
-    size_t cur = ftell(f);
-    fseek(f, swap32(entry->offset), SEEK_SET);
-    char* res = (char*)malloc(swap32(entry->length));
-    fread(res, sizeof(char), swap32(entry->length), f);
-    fseek(f, cur, SEEK_SET);
-    return res;
+libsrf_files_t* libsrf_to_single_file(char* data, size_t size, char* type) {
+    libsrf_files_t* files = (libsrf_files_t*)malloc(sizeof(libsrf_files_t));
+    files->count = 1;
+    files->files = (libsrf_file_t*)malloc(sizeof(libsrf_file_t));
+    files->files[0].size = size;
+    files->files[0].data = data;
+    strcpy(files->files[0].filetype, type);
+    return files;
 }
 
-// ---------------------------------------------------------------------------
-void dumpRaw(FileEntry* entry, FILE* f, char* name, char* output) {
-    char filename[128];
-    char *content = readEntry(entry, f);
-    sprintf(filename, "%s/%s%d.txt", output, name, swap32(entry->id));
-    FILE *o = fopen(filename, "wb");
-    fwrite(content, sizeof(char), swap32(entry->length), o);
-    fclose(o);
-    free(content);
-}
-
-#endif
