@@ -10,7 +10,7 @@
 static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height, size_t len) {
     int bpos = 0, pos = 0, i;
     unsigned char* bitmap = (unsigned char*)calloc(width * height * 2, 1);
-    uint16_t* result = (unsigned char*)calloc(width * height * 2, sizeof(uint16_t));
+    uint16_t* result = (uint16_t*)calloc(width * height * 2, sizeof(uint16_t));
     unsigned int extra = data[0] - 2;
     int next = data[0] + data[1];
     int bglen = -1;
@@ -97,7 +97,7 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
     char *ptr = content;
 
     ImageHeader *hdr = (ImageHeader *) ptr;
-    printf("Offset: %zd\nVersion: %d\nBlock Word Size: %d\nEntries: %d\n", libsrf_swap32(hdr->offset),
+    printf("Offset: %u\nVersion: %u\nBlock Word Size: %u\nEntries: %u\n", libsrf_swap32(hdr->offset),
            libsrf_swap16(hdr->version), libsrf_swap16(hdr->block_word_size), libsrf_swap16(hdr->entries));
     ptr += sizeof(ImageHeader);
 
@@ -110,6 +110,7 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
     // image indices
     char *header_end = ptr + entries * 2;
 
+    // TODO: save to json
     for (i = 0; i < entries; i++) {
         uint16_t offset = libsrf_swap16(*(uint16_t *) ptr);
         //printf("%d\n", offset);
@@ -149,11 +150,11 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
 
     ImageList* list = (ImageList*)(content + libsrf_swap32(hdr->offset));
     size_t images = libsrf_swap16(list->count1);
-    printf("Images: %d | %d\n", images, libsrf_swap16(list->count2));
+    printf("Images: %zu | %u\n", images, libsrf_swap16(list->count2));
 
     ImageDataHeader* img = (ImageDataHeader*)(list + 1);
     for(i = 0; i < images; i++) {
-        printf("[%d] Offset: %zd, width: %d, height: %d\n", i, libsrf_swap32(img->offset), libsrf_swap16(img->width),
+        printf("[%d] Offset: %u, width: %u, height: %u\n", i, libsrf_swap32(img->offset), libsrf_swap16(img->width),
                libsrf_swap16(img->height));
 
         unsigned char* img_data = (unsigned char*)(content + libsrf_swap32(img->offset));

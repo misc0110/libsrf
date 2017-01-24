@@ -9,7 +9,7 @@
 #include "plugin.h"
 
 // ---------------------------------------------------------------------------
-static libsrf_files_t *readWAVEEntry(libsrf_t* session, libsrf_entry_t *entry) {
+static libsrf_files_t *readWAVEEntry(libsrf_t *session, libsrf_entry_t *entry) {
     char *content = libsrf_get_raw_entry(session, entry);
     char *sound = (char *) calloc(entry->size + 100, sizeof(char));
     char *ptr = sound;
@@ -17,7 +17,7 @@ static libsrf_files_t *readWAVEEntry(libsrf_t* session, libsrf_entry_t *entry) {
     ptr += sizeof(WAVE);
 
     memcpy(wave->riff, "RIFF", 4);
-    wave->filesize = (uint32_t)entry->size;
+    wave->filesize = (uint32_t) entry->size;
     memcpy(wave->wave, "WAVE", 4);
     memcpy(wave->fmt, "fmt ", 4);
     wave->length = 16; //swap32(entry->length);
@@ -28,7 +28,7 @@ static libsrf_files_t *readWAVEEntry(libsrf_t* session, libsrf_entry_t *entry) {
     wave->bps_chan = 2;
     wave->bps = 16;
     memcpy(wave->data, "data", 4);
-    wave->size = (uint32_t)entry->size;
+    wave->size = (uint32_t) entry->size;
 
     memcpy(ptr, content + 85, entry->size - 85);
     free(content);
@@ -36,7 +36,7 @@ static libsrf_files_t *readWAVEEntry(libsrf_t* session, libsrf_entry_t *entry) {
 }
 
 // ---------------------------------------------------------------------------
-static libsrf_files_t *readAIFCEntry(libsrf_t* session, libsrf_entry_t *entry) {
+static libsrf_files_t *readAIFCEntry(libsrf_t *session, libsrf_entry_t *entry) {
     char *content = libsrf_get_raw_entry(session, entry);
     char *sound = (char *) calloc(entry->size + 100, sizeof(char));
     char *ptr = sound;
@@ -67,37 +67,49 @@ static libsrf_files_t *readAIFCEntry(libsrf_t* session, libsrf_entry_t *entry) {
     free(content);
 
     int wav_len = 0;
-    char* wav = libsrf_aifc2wav(sound, entry->size, &wav_len);
+    char *wav = libsrf_aifc2wav(sound, entry->size, &wav_len);
     free(sound);
     return libsrf_to_single_file(wav, wav_len, "wav");
 }
 
 // ---------------------------------------------------------------------------
-static libsrf_files_t* handlerSND(libsrf_t* session, libsrf_entry_t* entry) {
+static libsrf_files_t *handlerSND(libsrf_t *session, libsrf_entry_t *entry) {
     return readAIFCEntry(session, entry);
 }
 
 #define handlerMusic(t) libsrf_files_t* handler##t(libsrf_t* session, libsrf_entry_t* entry) { return readWAVEEntry(session, entry); }
 
 handlerMusic(MJ)
+
 handlerMusic(MK)
+
 handlerMusic(ML)
+
 handlerMusic(MM)
+
 handlerMusic(MN)
+
 handlerMusic(MO)
+
 handlerMusic(MP)
+
 handlerMusic(MQ)
 
 
 PLUGIN("snd", handlerSND);
 
 PLUGIN("Mj", handlerMJ);
+
 PLUGIN("Mk", handlerMK);
 
 PLUGIN("Ml", handlerML);
+
 PLUGIN("Mm", handlerMM);
+
 PLUGIN("Mn", handlerMN);
 
 PLUGIN("Mo", handlerMO);
+
 PLUGIN("Mp", handlerMP);
+
 PLUGIN("Mq", handlerMQ);

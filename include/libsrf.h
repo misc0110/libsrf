@@ -48,6 +48,8 @@ int libsrf_section_is_supported(libsrf_section_t* section);
 
 libsrf_files_t* libsrf_get_entry(libsrf_t* session, libsrf_entry_t* entry);
 
+// TODO: iterator and getter
+
 size_t libsrf_entry_get_size(libsrf_t* session, libsrf_entry_t* entry);
 
 size_t libsrf_entry_get_id(libsrf_t* session, libsrf_entry_t* entry);

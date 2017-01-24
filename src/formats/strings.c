@@ -7,6 +7,10 @@
 #include "cstring.h"
 #include "encoding.h"
 
+// TODO: correct JSON handler (-> quotation marks)
+
+// TODO: utf-8 header
+
 // ---------------------------------------------------------------------------
 static char *handleString(libsrf_t *session, libsrf_entry_t *entry, int correction) {
     char *content = libsrf_get_raw_entry(session, entry);
