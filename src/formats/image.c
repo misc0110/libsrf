@@ -92,7 +92,7 @@ static char *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
     strcpy(entry->filetype, "img");
     char *content = libsrf_get_raw_entry(session, entry);
     char *ptr = content;
-    
+
     strcpy(entry->filetype, "bmp");
 
     ImageHeader *hdr = (ImageHeader *) ptr;
@@ -154,7 +154,10 @@ static char *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
 
         unsigned char* img_data = (unsigned char*)(content + libsrf_swap32(img->offset));
         uint16_t* raw = convert_to_raw(img_data, libsrf_swap16(img->width), libsrf_swap16(img->height), entry->size - libsrf_swap32(img->offset));
-        return libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &(entry->plugin_size));
+        char* bmp = libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &(entry->plugin_size));
+        free(raw);
+        free(content); // TODO: handle other images
+        return bmp;
         img++;
         break;
     }

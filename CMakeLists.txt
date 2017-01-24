@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.4.0)
 
 project(srf)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb -Wall -fsanitize=address")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb -Wall")
 
 # Find source files
 file(GLOB SOURCES src/*.c src/formats/*.c)
