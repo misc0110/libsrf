@@ -13,6 +13,13 @@ libsrf_json_t* libsrf_json_create() {
     json->capacity = 256;
     json->data = (char*)calloc(json->capacity, 1);
     json->requires_sep = 0;
+    return json;
+}
+
+// ---------------------------------------------------------------------------
+void libsrf_json_destroy(libsrf_json_t* json) {
+    free(json->data);
+    free(json);
 }
 
 // ---------------------------------------------------------------------------
@@ -30,11 +37,38 @@ static void libsrf_json_reserve_capacity(libsrf_json_t* json, size_t len) {
 
 // ---------------------------------------------------------------------------
 static void libsrf_json_append_string(libsrf_json_t* json, const char* string) {
-    // TODO: encode quotes
+    char scratch[128];
+    char* tmp = scratch;
     size_t len = strlen(string);
-    libsrf_json_reserve_capacity(json, len + 1);
-    memcpy(json->data + json->pos, string, len + 1);
-    json->pos += len;
+    if(len >= 128) {
+        tmp = (char*)calloc(2 * len + 1, 1);
+    }
+    size_t index = 0;
+    int quoted = 0;
+    size_t i;
+    for(i = 0; i < len; i++) {
+        if(string[i] == '\\') {
+            quoted = !quoted;
+            tmp[index++] = string[i];
+            continue;
+        }
+        if(!quoted && (string[i] == '"')) {
+            tmp[index++] = '\\';
+            tmp[index++] = '"';
+        } else {
+            tmp[index++] = string[i];
+        }
+        quoted = 0;
+    }
+    tmp[index] = 0;
+
+    libsrf_json_reserve_capacity(json, index + 1);
+    memcpy(json->data + json->pos, tmp, index + 1);
+    json->pos += index;
+
+    if(tmp != scratch) {
+        free(tmp);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -143,3 +177,7 @@ void libsrf_json_write_string(libsrf_json_t* json, const char* val) {
     json->requires_sep = 1;
 }
 
+// ---------------------------------------------------------------------------
+char* libsrf_json_to_string(libsrf_json_t* json) {
+    return strdup(json->data);
+}

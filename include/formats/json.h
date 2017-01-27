@@ -14,6 +14,8 @@ typedef struct {
 
 
 libsrf_json_t* libsrf_json_create();
+void libsrf_json_destroy(libsrf_json_t* json);
+
 void libsrf_json_begin_object(libsrf_json_t* json);
 void libsrf_json_end_object(libsrf_json_t* json);
 void libsrf_json_begin_array(libsrf_json_t* json);
@@ -25,6 +27,8 @@ void libsrf_json_write_int(libsrf_json_t* json, ssize_t val);
 void libsrf_json_write_uint(libsrf_json_t* json, size_t val);
 void libsrf_json_write_float(libsrf_json_t* json, double val);
 void libsrf_json_write_string(libsrf_json_t* json, const char* val);
+
+char* libsrf_json_to_string(libsrf_json_t* json);
 
 void libsrf_json_dump(libsrf_json_t* json);
 
