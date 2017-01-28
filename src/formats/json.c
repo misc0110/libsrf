@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 libsrf_json_t* libsrf_json_create() {
     libsrf_json_t* json = (libsrf_json_t*)malloc(sizeof(libsrf_json_t));
-    json->flags = 0;
+    json->flags = 0; // LIBSRF_JSON_FLAG_PRETTY;
     json->pos = 0;
     json->capacity = 256;
     json->data = (char*)calloc(json->capacity, 1);
@@ -47,6 +47,11 @@ static void libsrf_json_append_string(libsrf_json_t* json, const char* string) {
     int quoted = 0;
     size_t i;
     for(i = 0; i < len; i++) {
+        if((string[i] == '\n' && (i && string[i - 1] != '\r')) || string[i] == '\r') {
+            tmp[index++] = '\\';
+            tmp[index++] = 'n';
+            continue;
+        }
         if(string[i] == '\\') {
             quoted = !quoted;
             tmp[index++] = string[i];
@@ -79,6 +84,15 @@ static void libsrf_json_append_quote(libsrf_json_t* json) {
 }
 
 // ---------------------------------------------------------------------------
+static void libsrf_json_append(libsrf_json_t* json, const char* str) {
+    size_t len = strlen(str);
+    libsrf_json_reserve_capacity(json, len + 1);
+    memcpy(json->data + json->pos, str, len + 1);
+    json->pos += len;
+}
+
+
+// ---------------------------------------------------------------------------
 static void libsrf_json_append_quoted_string(libsrf_json_t* json, const char* str) {
     libsrf_json_append_quote(json);
     libsrf_json_append_string(json, str);
@@ -89,7 +103,7 @@ static void libsrf_json_append_quoted_string(libsrf_json_t* json, const char* st
 // ---------------------------------------------------------------------------
 static void libsrf_json_check_sep(libsrf_json_t* json) {
     if(json->requires_sep) {
-        libsrf_json_append_string(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? ", " : ",");
+        libsrf_json_append(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? ", " : ",");
         json->requires_sep = 0;
     }
 }
@@ -97,26 +111,26 @@ static void libsrf_json_check_sep(libsrf_json_t* json) {
 // ---------------------------------------------------------------------------
 void libsrf_json_begin_object(libsrf_json_t* json) {
     libsrf_json_check_sep(json);
-    libsrf_json_append_string(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? "{\n" : "{");
+    libsrf_json_append(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? "{\n" : "{");
     json->requires_sep = 0;
 }
 
 // ---------------------------------------------------------------------------
 void libsrf_json_end_object(libsrf_json_t* json) {
-    libsrf_json_append_string(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? "}\n" : "}");
+    libsrf_json_append(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? "\n}\n" : "}");
     json->requires_sep = 1;
 }
 
 // ---------------------------------------------------------------------------
 void libsrf_json_begin_array(libsrf_json_t* json) {
     libsrf_json_check_sep(json);
-    libsrf_json_append_string(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? "[ " : "[");
+    libsrf_json_append(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? "[ " : "[");
     json->requires_sep = 0;
 }
 
 // ---------------------------------------------------------------------------
 void libsrf_json_end_array(libsrf_json_t* json) {
-    libsrf_json_append_string(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? " ]" : "]");
+    libsrf_json_append(json, (json->flags & LIBSRF_JSON_FLAG_PRETTY) ? " ]" : "]");
     json->requires_sep = 1;
 }
 

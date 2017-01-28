@@ -6,6 +6,7 @@
 #include "plugin.h"
 #include "cstring.h"
 #include "encoding.h"
+#include "formats/json.h"
 
 // TODO: correct JSON handler (-> quotation marks)
 
@@ -22,34 +23,36 @@ static char *handleString(libsrf_t *session, libsrf_entry_t *entry, int correcti
 static libsrf_files_t *handleUTF8String(libsrf_t *session, libsrf_entry_t *entry, int correction) {
     char *content = libsrf_get_raw_entry(session, entry);
     content[entry->size - correction] = 0;
+    size_t i;
+    for(i = 0; i < entry->size; i++) {
+        if(content[i] == 0x7b) {
+            // fix for strange encoding
+            content[i] = 1;
+        }
+    }
     char* utf = libsrf_encoding_move_to_utf8(content);
-    return libsrf_to_single_file(utf, strlen(utf) + 1, "txt");
+    return libsrf_to_single_file(utf, strlen(utf), "txt");
 }
 
 // ---------------------------------------------------------------------------
 static libsrf_files_t* handleStringArray(libsrf_t* session, libsrf_entry_t* entry) {
     char* content = handleString(session, entry, 0);
     char* str = content;
-    char* json = libsrf_cstring_create();
-    json = libsrf_cstring_append(json, "{[");
+    libsrf_json_t* json = libsrf_json_create();
+    libsrf_json_begin_array(json);
     while(strlen(str)) {
-        json = libsrf_cstring_append(json, "\"");
-        json = libsrf_cstring_append(json, str);
-        json = libsrf_cstring_append(json, "\"");
+        libsrf_json_write_string(json, str);
         str += strlen(str) + 1;
         if(str - content >= libsrf_swap32((uint32_t)entry->size)) {
             break;
         }
-        if(strlen(str)) {
-            json = libsrf_cstring_append(json, ", ");
-        }
-
     }
-    json = libsrf_cstring_append(json, "]}");
+    libsrf_json_end_array(json);
     free(content);
-    content = libsrf_cstring_move_to_char(json);
+    content = libsrf_json_to_string(json);
+    libsrf_json_destroy(json);
     char* utf = libsrf_encoding_move_to_utf8(content);
-    return libsrf_to_single_file(utf, strlen(utf) + 1, "json");
+    return libsrf_to_single_file(utf, strlen(utf), "json");
 }
 
 // ---------------------------------------------------------------------------
@@ -104,43 +107,34 @@ static libsrf_files_t *handlerWrds(libsrf_t *session, libsrf_entry_t *entry) {
     int count = content[0];
     char *str = content + 1;
 
-    char *json = libsrf_cstring_create();
-    json = libsrf_cstring_append(json, "{");
+    libsrf_json_t *json = libsrf_json_create();
+    libsrf_json_begin_object(json);
 
     for (i = 0; i < count; i++) {
-        json = libsrf_cstring_append(json, "{");
         int words = *str;
         str++;
 
-        json = libsrf_cstring_append(json, "\"");
-        json = libsrf_cstring_append(json, str);
-        json = libsrf_cstring_append(json, "\": [");
+        libsrf_json_key(json, str);
+        libsrf_json_begin_array(json);
 
         str += strlen(str) + 1;
 
         while (--words) {
-            json = libsrf_cstring_append(json, "\"");
-            json = libsrf_cstring_append(json, str);
-            json = libsrf_cstring_append(json, "\"");
+            libsrf_json_write_string(json, str);
 
             str += strlen(str) + 1;
             if (str - content >= entry->size) break;
-            if (words > 1) {
-                json = libsrf_cstring_append(json, ", ");
-            }
         }
-        json = libsrf_cstring_append(json, "]}");
-        if (i != count - 1) {
-            json = libsrf_cstring_append(json, ",\n");
-        }
-
+        libsrf_json_end_array(json);
     }
 
-    json = libsrf_cstring_append(json, "}");
+    libsrf_json_end_object(json);
+
     free(content);
-    content = libsrf_cstring_move_to_char(json);
+    content = libsrf_json_to_string(json);
+    libsrf_json_destroy(json);
     char* utf = libsrf_encoding_move_to_utf8(content);
-    return libsrf_to_single_file(utf, strlen(utf) + 1, "json");
+    return libsrf_to_single_file(utf, strlen(utf), "json");
 }
 
 // ---------------------------------------------------------------------------
@@ -154,8 +148,9 @@ static libsrf_files_t *handlerMultiStr(libsrf_t *session, libsrf_entry_t *entry)
         pos += 2;
     }
 
-    char *json = libsrf_cstring_create();
-    json = libsrf_cstring_append(json, "{[");
+    libsrf_json_t *json = libsrf_json_create();
+    libsrf_json_begin_object(json);
+    libsrf_json_begin_array(json);
 
     for (i = 0; i < count; i++) {
         int len = content[pos];
@@ -167,23 +162,19 @@ static libsrf_files_t *handlerMultiStr(libsrf_t *session, libsrf_entry_t *entry)
         }
         str[len] = 0;
 
-        json = libsrf_cstring_append(json, "\"");
-        json = libsrf_cstring_append(json, str);
-        json = libsrf_cstring_append(json, "\"");
-        if (i != count - 1) {
-            json = libsrf_cstring_append(json, ", ");
-        }
-
+        libsrf_json_write_string(json, str);
         pos += len + 1;
 
         libsrf_cstring_destroy(str);
     }
 
-    json = libsrf_cstring_append(json, "]}");
+    libsrf_json_end_array(json);
+    libsrf_json_end_object(json);
     free(content);
-    content = libsrf_cstring_move_to_char(json);
+    content = libsrf_json_to_string(json);
+    libsrf_json_destroy(json);
     char* utf = libsrf_encoding_move_to_utf8(content);
-    return libsrf_to_single_file(utf, strlen(utf) + 1, "json");
+    return libsrf_to_single_file(utf, strlen(utf), "json");
 }
 
 PLUGIN("STR ", handlerSTR);
