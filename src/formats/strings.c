@@ -28,7 +28,9 @@ static libsrf_files_t *handleUTF8String(libsrf_t *session, libsrf_entry_t *entry
         }
     }
     char* utf = libsrf_encoding_move_to_utf8(content);
-    return libsrf_to_single_file(utf, strlen(utf), "txt");
+    char* utf_file = libsrf_encoding_add_bom(utf);
+    free(utf);
+    return libsrf_to_single_file(utf_file, strlen(utf_file), "txt");
 }
 
 // ---------------------------------------------------------------------------
@@ -38,7 +40,9 @@ static libsrf_files_t* handleStringArray(libsrf_t* session, libsrf_entry_t* entr
     libsrf_json_t* json = libsrf_json_create();
     libsrf_json_begin_array(json);
     while(strlen(str)) {
-        libsrf_json_write_string(json, str);
+        char* utf = libsrf_encoding_to_utf8(str);
+        libsrf_json_write_string(json, utf);
+        free(utf);
         str += strlen(str) + 1;
         if(str - content >= libsrf_swap32((uint32_t)entry->size)) {
             break;
@@ -48,7 +52,8 @@ static libsrf_files_t* handleStringArray(libsrf_t* session, libsrf_entry_t* entr
     free(content);
     content = libsrf_json_to_string(json);
     libsrf_json_destroy(json);
-    char* utf = libsrf_encoding_move_to_utf8(content);
+    char* utf = libsrf_encoding_add_bom(content);
+    free(content);
     return libsrf_to_single_file(utf, strlen(utf), "json");
 }
 
@@ -111,13 +116,17 @@ static libsrf_files_t *handlerWrds(libsrf_t *session, libsrf_entry_t *entry) {
         int words = *str;
         str++;
 
-        libsrf_json_key(json, str);
+        char *utf = libsrf_encoding_to_utf8(str);
+        libsrf_json_key(json, utf);
+        free(utf);
         libsrf_json_begin_array(json);
 
         str += strlen(str) + 1;
 
         while (--words) {
-            libsrf_json_write_string(json, str);
+            utf = libsrf_encoding_to_utf8(str);
+            libsrf_json_write_string(json, utf);
+            free(utf);
 
             str += strlen(str) + 1;
             if (str - content >= entry->size) break;
@@ -130,7 +139,8 @@ static libsrf_files_t *handlerWrds(libsrf_t *session, libsrf_entry_t *entry) {
     free(content);
     content = libsrf_json_to_string(json);
     libsrf_json_destroy(json);
-    char* utf = libsrf_encoding_move_to_utf8(content);
+    char* utf = libsrf_encoding_add_bom(content);
+    free(content);
     return libsrf_to_single_file(utf, strlen(utf), "json");
 }
 
@@ -159,7 +169,9 @@ static libsrf_files_t *handlerMultiStr(libsrf_t *session, libsrf_entry_t *entry)
         }
         str[len] = 0;
 
-        libsrf_json_write_string(json, str);
+        char* utf = libsrf_encoding_to_utf8(str);
+        libsrf_json_write_string(json, utf);
+        free(utf);
         pos += len + 1;
 
         libsrf_cstring_destroy(str);
@@ -170,7 +182,7 @@ static libsrf_files_t *handlerMultiStr(libsrf_t *session, libsrf_entry_t *entry)
     free(content);
     content = libsrf_json_to_string(json);
     libsrf_json_destroy(json);
-    char* utf = libsrf_encoding_move_to_utf8(content);
+    char* utf = libsrf_encoding_add_bom(content);
     return libsrf_to_single_file(utf, strlen(utf), "json");
 }
 

@@ -22,11 +22,11 @@ static const uint32_t upper_encoding[] = {
 char *libsrf_encoding_to_utf8(char *string) {
     unsigned char *str = (unsigned char *) string;
     char *utf = libsrf_cstring_create();
-
+/*
     utf = libsrf_cstring_append_char(utf, 0xef);
     utf = libsrf_cstring_append_char(utf, 0xbb);
     utf = libsrf_cstring_append_char(utf, 0xbf);
-
+*/
     int i, len = strlen(string);
     for (i = 0; i < len; i++) {
         if (str[i] == 1) {
@@ -53,5 +53,15 @@ char *libsrf_encoding_to_utf8(char *string) {
 char *libsrf_encoding_move_to_utf8(char *str) {
     char *utf = libsrf_encoding_to_utf8(str);
     free(str);
+    return utf;
+}
+
+// ---------------------------------------------------------------------------
+char *libsrf_encoding_add_bom(char *str) {
+    char* utf = (char*)malloc(strlen(str) + 4);
+    utf[0] = 0xef;
+    utf[1] = 0xbb;
+    utf[2] = 0xbf;
+    strcpy(utf + 3, str);
     return utf;
 }

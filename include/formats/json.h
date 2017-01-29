@@ -1,5 +1,6 @@
 #ifndef YDKJEXTRACTOR_JSON_H
 #define YDKJEXTRACTOR_JSON_H
+#include <stdio.h>
 
 typedef struct {
     char* data;

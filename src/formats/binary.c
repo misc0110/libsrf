@@ -6,8 +6,6 @@
 #include "util.h"
 #include "cstring.h"
 
-// TODO: qheaders
-
 // ---------------------------------------------------------------------------
 static libsrf_files_t *handlerAns(libsrf_t *session, libsrf_entry_t *entry) {
     char* json = libsrf_cstring_create();
