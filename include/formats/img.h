@@ -23,5 +23,6 @@ typedef struct {
 
 
 char* libsrf_raw_to_bmp(uint16_t* data, size_t width, size_t height, size_t* bmp_size);
+char* libsrf_raw_to_png(uint16_t* data, size_t width, size_t height, size_t* png_size);
 
 #endif //YDKJEXTRACTOR_BMP_H

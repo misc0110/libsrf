@@ -4,7 +4,7 @@
 #include "plugin.h"
 #include "libsrf.h"
 #include "util.h"
-#include "formats/bmp.h"
+#include "formats/img.h"
 
 // ---------------------------------------------------------------------------
 static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height, size_t len) {
@@ -91,6 +91,7 @@ static uint16_t* convert_to_raw(unsigned char* data, size_t width, size_t height
 }
 
 
+
 // ---------------------------------------------------------------------------
 static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
     char *content = libsrf_get_raw_entry(session, entry);
@@ -159,14 +160,22 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
 
         unsigned char* img_data = (unsigned char*)(content + libsrf_swap32(img->offset));
         uint16_t* raw = convert_to_raw(img_data, libsrf_swap16(img->width), libsrf_swap16(img->height), entry->size - libsrf_swap32(img->offset));
-        size_t bmp_size = 0;
-        char* bmp = libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &bmp_size);
+        size_t file_size = 0;
+        char* file_data = NULL;
+        char file_ext[4];
+        if(0) {
+            file_data = libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size);
+            strcpy(file_ext, "bmp");
+        } else {
+            file_data = libsrf_raw_to_png(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size);
+            strcpy(file_ext, "png");
+        }
         free(raw);
         files->count++;
         files->files = realloc(files->files, files->count * sizeof(libsrf_file_t));
-        files->files[files->count - 1].data = bmp;
-        files->files[files->count - 1].size = bmp_size;
-        strcpy(files->files[files->count - 1].filetype, "bmp");
+        files->files[files->count - 1].data = file_data;
+        files->files[files->count - 1].size = file_size;
+        strcpy(files->files[files->count - 1].filetype, file_ext);
         img++;
     }
 
