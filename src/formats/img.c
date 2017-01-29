@@ -121,9 +121,7 @@ char *libsrf_raw_to_png(uint16_t *data, size_t width, size_t height, size_t *png
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
             int idx = data[x + y * width] & 0xff;
-            //uint32_t color = png_palette[idx];
-            //color |= (~(data[x + y * width] >> 8) << 24);
-            libattopng_set_pixel(png, x, y, idx /*color*/);
+            libattopng_set_pixel(png, x, y, idx);
         }
     }
     char *png_data = libattopng_get_data(png, png_size);

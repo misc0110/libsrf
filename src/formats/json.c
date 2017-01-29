@@ -8,7 +8,7 @@
 // ---------------------------------------------------------------------------
 libsrf_json_t* libsrf_json_create() {
     libsrf_json_t* json = (libsrf_json_t*)malloc(sizeof(libsrf_json_t));
-    json->flags = 0; // LIBSRF_JSON_FLAG_PRETTY;
+    json->flags = 0; //LIBSRF_JSON_FLAG_PRETTY;
     json->pos = 0;
     json->capacity = 256;
     json->data = (char*)calloc(json->capacity, 1);
