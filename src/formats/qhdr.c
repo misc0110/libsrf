@@ -11,7 +11,8 @@
 // ---------------------------------------------------------------------------
 static libsrf_files_t *handlerQhdr(libsrf_t *session, libsrf_entry_t *entry) {
     const char *typename[] = {
-            "normal", "n/a", "gibberish", "disordat", "jackattack", "fiber" // Todo: type for bingo
+            "normal", "n/a", "gibberish", "disordat", "jackattack", "fiber", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
+            "threeway", "bingo", "roadkill", "n/a", "n/a", "rideintro"
     };
 
     char *content = libsrf_get_raw_entry(session, entry);
@@ -39,12 +40,19 @@ static libsrf_files_t *handlerQhdr(libsrf_t *session, libsrf_entry_t *entry) {
     libsrf_json_key(json, "subtype");
     libsrf_json_write_int(json, qhdr->subtype);
     libsrf_json_key(json, "typename");
-    libsrf_json_write_string(json, typename[qhdr->type]);
+    if (qhdr->type < sizeof(typename) / sizeof(typename[0])) {
+        libsrf_json_write_string(json, typename[qhdr->type]);
+    } else {
+        libsrf_json_write_string(json, "n/a");
+    }
     libsrf_json_key(json, "correct");
     libsrf_json_write_int(json, qhdr->correct);
     libsrf_json_key(json, "correct2");
-    libsrf_json_write_int(json, qhdr->corr2);
-
+    if (entry->size >= sizeof(QHDR)) {
+        libsrf_json_write_int(json, qhdr->corr2);
+    } else {
+        libsrf_json_write_int(json, 0);
+    }
 
     libsrf_json_end_object(json);
     char *hdr = libsrf_json_to_string(json);
