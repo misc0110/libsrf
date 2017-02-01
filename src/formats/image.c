@@ -51,6 +51,11 @@ static uint16_t *convert_to_raw(unsigned char *data, size_t width, size_t height
                 }
                 if (pos >= len) break;
                 int offset = bpos - (info[0] + 0x100 * (info[1] & 0x0f));
+                if(offset < 0) {
+                    break;
+                } else if(offset >= bpos) {
+                    break;
+                }
                 for (i = 0; i < repeat + 2; i++) {
                     if ((bpos == next - extra) || (bglen != -1)) {
                         if (bglen == -1) {
@@ -62,6 +67,7 @@ static uint16_t *convert_to_raw(unsigned char *data, size_t width, size_t height
                         }
                     }
                     bitmap[bpos++] = bitmap[offset++];
+                    if(bpos >= width * height * 2 || offset >= width * height * 2) break;
                     if (pos >= len) break;
                 }
                 if (pos >= len) break;
