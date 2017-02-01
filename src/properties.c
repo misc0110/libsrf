@@ -1,0 +1,9 @@
+#include "properties.h"
+
+const char *LIBSRF_PROPERTY_VALUE_STRING[] = {
+        FOREACH_PROPERTY_VALUE(GENERATE_STRING)
+};
+
+const char *LIBSRF_PROPERTY_STRING[] = {
+        FOREACH_PROPERTY(GENERATE_STRING)
+};
