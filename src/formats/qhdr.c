@@ -14,6 +14,9 @@ static libsrf_files_t *handlerQhdr(libsrf_t *session, libsrf_entry_t *entry) {
             "normal", "n/a", "gibberish", "disordat", "jackattack", "fiber", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
             "threeway", "bingo", "roadkill", "n/a", "n/a", "rideintro"
     };
+    const char* subtypename[] = {
+            "n/a", "normal", "fillintheblank", "whatshisname", "picture", "superaudio", "guesthost"
+    };
 
     char *content = libsrf_get_raw_entry(session, entry);
     QHDR *qhdr = (QHDR *) content;
@@ -42,6 +45,11 @@ static libsrf_files_t *handlerQhdr(libsrf_t *session, libsrf_entry_t *entry) {
     libsrf_json_key(json, "typename");
     if (qhdr->type < sizeof(typename) / sizeof(typename[0])) {
         libsrf_json_write_string(json, typename[qhdr->type]);
+    } else {
+        libsrf_json_write_string(json, "n/a");
+    }
+    if(qhdr->subtype < sizeof(subtypename) / sizeof(subtypename[0])) {
+        libsrf_json_write_string(json, subtypename[qhdr->subtype]);
     } else {
         libsrf_json_write_string(json, "n/a");
     }
