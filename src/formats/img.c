@@ -3,7 +3,7 @@
 #include "formats/img.h"
 #include "formats/libattopng.h"
 
-static const uint32_t palette_ydkj1[] = {
+static const uint32_t palette_1[] = {
         0x00000000, 0xff000080, 0xff008000, 0xff008080, 0xff800000, 0xff800080, 0xff808000, 0xffc0c0c0, 0xffc0dcc0,
         0xfff0caa6, 0xffccffff, 0xff99ffff, 0xff66ffff, 0xff33ffff, 0xffffccff, 0xffccccff, 0xff99ccff, 0xff66ccff,
         0xff33ccff, 0xff00ccff, 0xffff99ff, 0xffcc99ff, 0xff9999ff, 0xff6699ff, 0xff3399ff, 0xff0099ff, 0xffff66ff,
@@ -35,8 +35,8 @@ static const uint32_t palette_ydkj1[] = {
         0xffff0000, 0xffff00ff, 0xffffff00, 0xffffffff
 };
 
-static const uint32_t palette_ydkj2[] = {
-        0xff000000, 0xff000080, 0xff008000, 0xff008080, 0xff800000, 0xff800080, 0xff808000, 0xffc0c0c0, 0xffc0dcc0,
+static const uint32_t palette_2[] = {
+        0x00000000, 0xff000080, 0xff008000, 0xff008080, 0xff800000, 0xff800080, 0xff808000, 0xffc0c0c0, 0xffc0dcc0,
         0xfff0caa6, 0xffccffff, 0xff99ffff, 0xff66ffff, 0xff33ffff, 0xffffccff, 0xffccccff, 0xff99ccff, 0xff66ccff,
         0xff33ccff, 0xff00ccff, 0xffff99ff, 0xffcc99ff, 0xff9999ff, 0xff6699ff, 0xff3399ff, 0xff0099ff, 0xffff66ff,
         0xffcc66ff, 0xff9966ff, 0xff6666ff, 0xff3366ff, 0xff0066ff, 0xffff33ff, 0xffcc33ff, 0xff9933ff, 0xff6633ff,
@@ -67,8 +67,8 @@ static const uint32_t palette_ydkj2[] = {
         0xffff0000, 0xffff00ff, 0xffffff00, 0xffffffff
 };
 
-static const uint32_t palette_ydkj3[] = {
-        0xff000000, 0xff000080, 0xff008000, 0xff008080, 0xff800000, 0xff800080, 0xff808000, 0xffc0c0c0, 0xffc0dcc0,
+static const uint32_t palette_3[] = {
+        0x00000000, 0xff000080, 0xff008000, 0xff008080, 0xff800000, 0xff800080, 0xff808000, 0xffc0c0c0, 0xffc0dcc0,
         0xfff0caa6, 0xffffffff, 0xff0a0140, 0xff221f33, 0xff100067, 0xff2900ff, 0xff180094, 0xff130071, 0xff18008c,
         0xff2100bd, 0xff3a364d, 0xff2900e7, 0xff2300c6, 0xff2100b5, 0xff2900de, 0xff180081, 0xff2900d6, 0xff2100ad,
         0xff200495, 0xff3100f9, 0xff2900ce, 0xff2100a5, 0xff3208da, 0xff2900c6, 0xff3f0ff7, 0xff3100e8, 0xff5120fe,
@@ -99,8 +99,12 @@ static const uint32_t palette_ydkj3[] = {
         0xffff0000, 0xffff00ff, 0xffffff00, 0xffffffff
 };
 
+static const uint32_t *palette[] = {
+        palette_1, palette_2, palette_3
+};
+
 // ---------------------------------------------------------------------------
-        char *libsrf_raw_to_bmp(uint16_t *data, size_t width, size_t height, size_t *bmp_size) {
+char *libsrf_raw_to_bmp(uint16_t *data, size_t width, size_t height, size_t *bmp_size, int palette_idx) {
     int bpp = 4; // bytes/pixel
     uint32_t line_width = width * bpp;
     size_t x, y;
@@ -127,11 +131,13 @@ static const uint32_t palette_ydkj3[] = {
     header->data_len = line_width * height * bpp;
     header->filesize = header->data_len + header->pos;
 
+    uint32_t *p = palette[palette_idx];
+
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
             int idx = data[x + y * width] & 0xff;
-            uint32_t color = ((palette_ydkj1[idx] & 0xff) << 16) | (palette_ydkj1[idx] & 0xff00) |
-                             ((palette_ydkj1[idx] >> 16) & 0xff);
+            uint32_t color = ((p[idx] & 0xff) << 16) | (p[idx] & 0xff00) |
+                             ((p[idx] >> 16) & 0xff);
             color |= (~(data[x + y * width] >> 8) << 24);
             int byte_pos = (height - y - 1) * line_width + x * bpp;
             bmp[byte_pos] = color & 0xff;
@@ -146,10 +152,10 @@ static const uint32_t palette_ydkj3[] = {
 }
 
 // ---------------------------------------------------------------------------
-char *libsrf_raw_to_png(uint16_t *data, size_t width, size_t height, size_t *png_size) {
+char *libsrf_raw_to_png(uint16_t *data, size_t width, size_t height, size_t *png_size, int palette_idx) {
     size_t x, y;
     libattopng_t *png = libattopng_new(width, height, PNG_PALETTE);
-    libattopng_set_palette(png, (uint32_t *) palette_ydkj1, 256);
+    libattopng_set_palette(png, (uint32_t *) palette[palette_idx], 256);
 
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {

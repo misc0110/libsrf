@@ -203,10 +203,10 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
         char *file_data = NULL;
         char file_ext[4];
         if (0) {
-            file_data = libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size);
+            file_data = libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size, 0);
             strcpy(file_ext, "bmp");
         } else {
-            file_data = libsrf_raw_to_png(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size);
+            file_data = libsrf_raw_to_png(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size, 0);
             strcpy(file_ext, "png");
         }
         free(raw);

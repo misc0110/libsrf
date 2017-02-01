@@ -22,7 +22,7 @@ typedef struct {
 } __attribute__((packed)) BMPHeader;
 
 
-char* libsrf_raw_to_bmp(uint16_t* data, size_t width, size_t height, size_t* bmp_size);
-char* libsrf_raw_to_png(uint16_t* data, size_t width, size_t height, size_t* png_size);
+char* libsrf_raw_to_bmp(uint16_t* data, size_t width, size_t height, size_t* bmp_size, int palette_idx);
+char* libsrf_raw_to_png(uint16_t* data, size_t width, size_t height, size_t* png_size, int palette_idx);
 
 #endif //YDKJEXTRACTOR_BMP_H
