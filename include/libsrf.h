@@ -35,7 +35,11 @@ typedef struct {
     libsrf_file_t* files;
 } libsrf_files_t;
 
-libsrf_t *libsrf_open(const char *file);
+libsrf_t* libsrf_new();
+
+void libsrf_destroy(libsrf_t* session);
+
+int libsrf_open(libsrf_t* session, const char *file);
 
 int libsrf_is_valid(libsrf_t *session);
 
@@ -62,5 +66,7 @@ size_t libsrf_section_get_entries(libsrf_t* session, libsrf_section_t* header);
 const char* libsrf_section_get_type(libsrf_t* session, libsrf_section_t* header);
 
 void libsrf_set_property(libsrf_t* session, libsrf_property_t property, libsrf_property_value_t value);
+
+void libsrf_set_property_string(libsrf_t* session, const char* property, const char* value);
 
 #endif //YDKJEXTRACTOR_SRF_H
