@@ -43,17 +43,17 @@ typedef struct {
 
 
 // ---------------------------------------------------------------------------
-libsrf_t* libsrf_new() {
+libsrf_t *libsrf_new() {
     libsrf_t *session = (libsrf_t *) calloc(1, sizeof(libsrf_t));
-    if(!session) {
+    if (!session) {
         return NULL;
     }
     return session;
 }
 
 // ---------------------------------------------------------------------------
-int libsrf_open(libsrf_t* session, const char *file) {
-    if(!session) {
+int libsrf_open(libsrf_t *session, const char *file) {
+    if (!session) {
         return 0;
     }
     SRFHeader hd;
@@ -94,7 +94,7 @@ void libsrf_close(libsrf_t *session) {
 }
 
 // ---------------------------------------------------------------------------
-void libsrf_destroy(libsrf_t* session) {
+void libsrf_destroy(libsrf_t *session) {
     libsrf_setting_cleanup(session);
     free(session);
 }
@@ -150,17 +150,93 @@ libsrf_files_t *libsrf_get_entry(libsrf_t *session, libsrf_entry_t *entry) {
 }
 
 // ---------------------------------------------------------------------------
-int libsrf_section_is_supported(libsrf_section_t *section) {
+size_t libsrf_files_count(libsrf_t *session, libsrf_files_t *files) {
+    if (!files) return 0;
+    return files->count;
+}
+
+// ---------------------------------------------------------------------------
+void libsrf_entry_iterator(libsrf_iterator_t *it, libsrf_files_t *files) {
+    if (!it) {
+        return;
+    }
+    it->valid = 0;
+    if (!files) {
+        return;
+    }
+    it->begin = files->files;
+    it->current = files->files;
+    it->valid = 1;
+    it->element_size = sizeof(libsrf_file_t);
+    it->end = files->files + files->count;
+}
+
+// ---------------------------------------------------------------------------
+libsrf_file_t *libsrf_get_file(libsrf_iterator_t *iterator) {
+    if (!iterator) return NULL;
+    return (libsrf_file_t *) iterator->current;
+}
+
+// ---------------------------------------------------------------------------
+int libsrf_iterator_is_valid(libsrf_iterator_t *iterator) {
+    if (!iterator) return 0;
+    return iterator->valid;
+}
+
+// ---------------------------------------------------------------------------
+int libsrf_iterator_next(libsrf_iterator_t *iterator) {
+    if (!iterator) return 0;
+    iterator->current = (void *) (((char *) iterator->current) + iterator->element_size);
+    if (iterator->current >= iterator->end) {
+        iterator->valid = 0;
+    }
+    return iterator->valid;
+}
+
+// ---------------------------------------------------------------------------
+size_t libsrf_file_get_size(libsrf_t *session, libsrf_file_t *file) {
+    if (!file) return 0;
+    return file->size;
+}
+
+// ---------------------------------------------------------------------------
+char *libsrf_file_get_data(libsrf_t *session, libsrf_file_t *file) {
+    if (!file) return NULL;
+    return file->data;
+}
+
+
+// ---------------------------------------------------------------------------
+const char *libsrf_file_get_type(libsrf_t *session, libsrf_file_t *file) {
+    if (!file) return NULL;
+    return file->filetype;
+}
+
+// ---------------------------------------------------------------------------
+void libsrf_files_free(libsrf_t *session, libsrf_files_t *files) {
+    size_t i;
+    for (i = 0; i < files->count; i++) {
+        free(files->files[i].data);
+    }
+    free(files->files);
+    free(files);
+}
+
+// ---------------------------------------------------------------------------
+int libsrf_section_is_supported(libsrf_t *session, libsrf_section_t *section) {
+    if (!section) return 0;
     return libsrf_find_plugin(section->type) != -1;
 }
 
 // ---------------------------------------------------------------------------
 size_t libsrf_entry_get_size(libsrf_t *session, libsrf_entry_t *entry) {
+    if (!entry) return 0;
     return entry->size;
 }
 
 // ---------------------------------------------------------------------------
 size_t libsrf_entry_get_id(libsrf_t *session, libsrf_entry_t *entry) {
+    if (!entry) return 0;
     return entry->id;
 }
 
@@ -175,14 +251,15 @@ const char *libsrf_section_get_type(libsrf_t *session, libsrf_section_t *header)
 }
 
 // ---------------------------------------------------------------------------
-void libsrf_set_property(libsrf_t* session, libsrf_property_t property, libsrf_property_value_t value) {
+void libsrf_set_property(libsrf_t *session, libsrf_property_t property, libsrf_property_value_t value) {
     if (property >= _LAST_PROPERTY || value >= _LAST_PROPVAL) {
         return;
     }
-    libsrf_setting_set(session, LIBSRF_PROPERTY_STRING[(size_t) property], LIBSRF_PROPERTY_VALUE_STRING[(size_t) value]);
+    libsrf_setting_set(session, LIBSRF_PROPERTY_STRING[(size_t) property],
+                       LIBSRF_PROPERTY_VALUE_STRING[(size_t) value]);
 }
 
 // ---------------------------------------------------------------------------
-void libsrf_set_property_string(libsrf_t* session, const char* property, const char* value) {
+void libsrf_set_property_string(libsrf_t *session, const char *property, const char *value) {
     libsrf_setting_set(session, property, value);
 }

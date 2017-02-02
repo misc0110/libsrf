@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include "settings.h"
 
-// TODO: free memory
-
 // ---------------------------------------------------------------------------
 void libsrf_setting_cleanup(libsrf_t* session) {
     size_t i;
