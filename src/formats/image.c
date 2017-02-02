@@ -4,6 +4,8 @@
 #include "plugin.h"
 #include "libsrf.h"
 #include "util.h"
+#include "properties.h"
+#include "settings.h"
 #include "formats/img.h"
 #include "formats/json.h"
 
@@ -51,9 +53,9 @@ static uint16_t *convert_to_raw(unsigned char *data, size_t width, size_t height
                 }
                 if (pos >= len) break;
                 int offset = bpos - (info[0] + 0x100 * (info[1] & 0x0f));
-                if(offset < 0) {
+                if (offset < 0) {
                     break;
-                } else if(offset >= bpos) {
+                } else if (offset >= bpos) {
                     break;
                 }
                 for (i = 0; i < repeat + 2; i++) {
@@ -67,7 +69,7 @@ static uint16_t *convert_to_raw(unsigned char *data, size_t width, size_t height
                         }
                     }
                     bitmap[bpos++] = bitmap[offset++];
-                    if(bpos >= width * height * 2 || offset >= width * height * 2) break;
+                    if (bpos >= width * height * 2 || offset >= width * height * 2) break;
                     if (pos >= len) break;
                 }
                 if (pos >= len) break;
@@ -132,13 +134,13 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
                     (header_end + (offset - 1) * sizeof(ImageDisplayDefinition));
 
             libsrf_json_key(json, "left");
-            libsrf_json_write_int(json, (int16_t)libsrf_swap16(def->left));
+            libsrf_json_write_int(json, (int16_t) libsrf_swap16(def->left));
             libsrf_json_key(json, "top");
-            libsrf_json_write_int(json, (int16_t)libsrf_swap16(def->top));
+            libsrf_json_write_int(json, (int16_t) libsrf_swap16(def->top));
             libsrf_json_key(json, "bottom");
-            libsrf_json_write_int(json, (int16_t)libsrf_swap16(def->bottom));
+            libsrf_json_write_int(json, (int16_t) libsrf_swap16(def->bottom));
             libsrf_json_key(json, "right");
-            libsrf_json_write_int(json, (int16_t)libsrf_swap16(def->right));
+            libsrf_json_write_int(json, (int16_t) libsrf_swap16(def->right));
             libsrf_json_key(json, "entries");
             libsrf_json_write_int(json, libsrf_swap16(def->count));
 
@@ -161,13 +163,13 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
                 libsrf_json_write_int(json, idef->val);
 
                 libsrf_json_key(json, "left");
-                libsrf_json_write_int(json, (int16_t)libsrf_swap16(idef->left));
+                libsrf_json_write_int(json, (int16_t) libsrf_swap16(idef->left));
                 libsrf_json_key(json, "top");
-                libsrf_json_write_int(json, (int16_t)libsrf_swap16(idef->top));
+                libsrf_json_write_int(json, (int16_t) libsrf_swap16(idef->top));
                 libsrf_json_key(json, "bottom");
-                libsrf_json_write_int(json, (int16_t)libsrf_swap16(idef->bottom));
+                libsrf_json_write_int(json, (int16_t) libsrf_swap16(idef->bottom));
                 libsrf_json_key(json, "right");
-                libsrf_json_write_int(json, (int16_t)libsrf_swap16(idef->right));
+                libsrf_json_write_int(json, (int16_t) libsrf_swap16(idef->right));
                 libsrf_json_key(json, "index");
                 libsrf_json_write_int(json, libsrf_swap16(idef->index));
                 libsrf_json_end_object(json);
@@ -186,6 +188,7 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
     files->files[files->count - 1].data = libsrf_json_to_string(json);
     files->files[files->count - 1].size = strlen(files->files[files->count - 1].data);
     strcpy(files->files[files->count - 1].filetype, "json");
+    libsrf_json_destroy(json);
 
     ImageList *list = (ImageList *) (content + libsrf_swap32(hdr->offset));
     size_t images = libsrf_swap16(list->count1);
@@ -202,11 +205,23 @@ static libsrf_files_t *handlerOff4(libsrf_t *session, libsrf_entry_t *entry) {
         size_t file_size = 0;
         char *file_data = NULL;
         char file_ext[4];
-        if (0) {
-            file_data = libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size, 0);
+        size_t palette = 0;
+        if (IS_SETTING(session, IMAGE_PALETTE, IMAGE_PALETTE_1)) palette = 0;
+        else if (IS_SETTING(session, IMAGE_PALETTE, IMAGE_PALETTE_2)) palette = 1;
+        else if (IS_SETTING(session, IMAGE_PALETTE, IMAGE_PALETTE_3)) palette = 2;
+        else if (IS_SETTING(session, IMAGE_PALETTE, IMAGE_PALETTE_4)) palette = 3;
+        else if (IS_SETTING(session, IMAGE_PALETTE, IMAGE_PALETTE_5)) palette = 4;
+        else if (IS_SETTING(session, IMAGE_PALETTE, IMAGE_PALETTE_6)) palette = 5;
+        else if (IS_SETTING(session, IMAGE_PALETTE, IMAGE_PALETTE_7)) palette = 6;
+        else if (IS_SETTING(session, IMAGE_PALETTE, IMAGE_PALETTE_8)) palette = 7;
+
+        if (IS_SETTING(session, IMAGE_FORMAT, IMAGE_FORMAT_BMP)) {
+            file_data = libsrf_raw_to_bmp(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size,
+                                          palette);
             strcpy(file_ext, "bmp");
         } else {
-            file_data = libsrf_raw_to_png(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size, 0);
+            file_data = libsrf_raw_to_png(raw, libsrf_swap16(img->width), libsrf_swap16(img->height), &file_size,
+                                          palette);
             strcpy(file_ext, "png");
         }
         free(raw);

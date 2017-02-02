@@ -45,7 +45,10 @@ typedef struct {
 // ---------------------------------------------------------------------------
 libsrf_t *libsrf_open(const char *file) {
     SRFHeader hd;
-    libsrf_t *session = (libsrf_t *) malloc(sizeof(libsrf_t));
+    libsrf_t *session = (libsrf_t *) calloc(1, sizeof(libsrf_t));
+    if(!session) {
+        return NULL;
+    }
 
     session->file = fopen(file, "rb");
     if (session->file == NULL) {
@@ -80,6 +83,7 @@ void libsrf_close(libsrf_t *session) {
         fclose(session->file);
     }
     session->file = NULL;
+    libsrf_setting_cleanup(session);
     free(session);
 }
 
@@ -159,10 +163,11 @@ const char *libsrf_section_get_type(libsrf_t *session, libsrf_section_t *header)
 }
 
 // ---------------------------------------------------------------------------
-void libsrf_set_property(libsrf_property_t property, libsrf_property_value_t value) {
+void libsrf_set_property(libsrf_t* session, libsrf_property_t property, libsrf_property_value_t value) {
     if (property >= _LAST_PROPERTY || value >= _LAST_PROPVAL) {
         return;
     }
-    libsrf_setting_set(LIBSRF_PROPERTY_STRING[(size_t) property], LIBSRF_PROPERTY_VALUE_STRING[(size_t) value]);
+    printf("Set %s to %s\n", LIBSRF_PROPERTY_STRING[(size_t) property], LIBSRF_PROPERTY_VALUE_STRING[(size_t) value]);
+    libsrf_setting_set(session, LIBSRF_PROPERTY_STRING[(size_t) property], LIBSRF_PROPERTY_VALUE_STRING[(size_t) value]);
 }
 

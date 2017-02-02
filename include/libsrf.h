@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include "properties.h"
 
+
 typedef struct {
     FILE *file;
     size_t entries_to_read;
     char current_type[5];
     size_t srf_size;
+    libsrf_settings_t settings;
 } libsrf_t;
 
 typedef struct {
@@ -59,6 +61,6 @@ size_t libsrf_section_get_entries(libsrf_t* session, libsrf_section_t* header);
 
 const char* libsrf_section_get_type(libsrf_t* session, libsrf_section_t* header);
 
-void libsrf_set_property(libsrf_property_t property, libsrf_property_value_t value);
+void libsrf_set_property(libsrf_t* session, libsrf_property_t property, libsrf_property_value_t value);
 
 #endif //YDKJEXTRACTOR_SRF_H
